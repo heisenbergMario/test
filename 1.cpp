@@ -4,6 +4,7 @@ https://blog.csdn.net/u014647208/article/details/80006305
 http://www.360doc.com/content/19/0806/08/7551_853249151.shtml
 https://blog.csdn.net/fxbjye/article/details/78292589
 https://blog.csdn.net/wince_lover/article/details/70337809
+https://stackoverflow.com/questions/56642221/is-device-is-kernel-driver-active-not-working-in-libusb-1-0-22-7z
 */
 
 #include<iostream>
@@ -38,7 +39,7 @@ static void print_devs(libusb_device** devs)
 	data[4095] = '1';
 	unsigned char data_rec[4096] = "\0";
 	int lenth = 0;
-	int timeout = 1000;
+	int timeout = 2000;
 	while ((dev = devs[i++]) != NULL) {
 		
 		
@@ -55,16 +56,19 @@ static void print_devs(libusb_device** devs)
 				printf("  path:%d", path[0]);
 				for (j = 1; j < r; j++)
 					printf(".%d", path[j]);
-			}
+			}			
+			
+			r = libusb_get_config_descriptor(dev, 0, &config_descriptor_in);		
 			printf("\nbNumConfigurations:%d", desc.bNumConfigurations);
-			r = libusb_get_config_descriptor(dev, 0, &config_descriptor_in);
-			printf("  config0.bNumInterfaces:%d", config_descriptor_in->bNumInterfaces);
-			printf(("  bInterfaceNumber:%d"), config_descriptor_in->interface->altsetting->bInterfaceNumber);
-			printf(("  bNumEndpoints:%d"), config_descriptor_in->interface->altsetting->bNumEndpoints);
-			printf(("  bEndpoint-0-Address:%d(DT:%d/%d)"), config_descriptor_in->interface->altsetting->endpoint->bEndpointAddress
-				, config_descriptor_in->bDescriptorType, config_descriptor_in->interface->altsetting->endpoint->bDescriptorType);
-			printf(("  bEndpoint-1-Address:%d(DT:%d/%d)"), (config_descriptor_in->interface->altsetting->endpoint)[1].bEndpointAddress
-				, config_descriptor_in->bDescriptorType, (config_descriptor_in->interface->altsetting->endpoint)[1].bDescriptorType);
+			printf("\nconfig DescriptorType:%d", config_descriptor_in->bDescriptorType);
+			printf("\n  config-0.bNumInterfaces:%d", config_descriptor_in->bNumInterfaces);
+			printf(("\n  bInterfaceNumber:%d"), config_descriptor_in->interface->altsetting->bInterfaceNumber);						
+			printf("\n  interface-0 DescriptorType:%d", config_descriptor_in->interface->altsetting->bDescriptorType);
+			printf("\n    bNumEndpoints:%d", config_descriptor_in->interface->altsetting->bNumEndpoints);
+			printf(("\n    bEndpoint-0 Address:0x%02X(DT:%d attribute:%d)"), config_descriptor_in->interface->altsetting->endpoint->bEndpointAddress
+				, config_descriptor_in->interface->altsetting->endpoint->bDescriptorType, config_descriptor_in->interface->altsetting->endpoint->bmAttributes);
+			printf(("\n    bEndpoint-1-Address:0x%2X(DT:%d attribute:%d)"), (config_descriptor_in->interface->altsetting->endpoint)[1].bEndpointAddress
+				, (config_descriptor_in->interface->altsetting->endpoint)[1].bDescriptorType, (config_descriptor_in->interface->altsetting->endpoint)[1].bmAttributes);
 			printf("\n\n");
 
 			r = libusb_open(dev, &dev_handle);
@@ -126,7 +130,8 @@ static void print_devs(libusb_device** devs)
 				}
 				else{
 					perror("host->device finish");
-					printf("%d bulk transfer success:%c ......%c\n\n", (int)sizeof(data), data[0], data[sizeof(data) - 1]);
+					printf("%d bulk transfer success:%c ......%c\n", (int)sizeof(data), data[0], data[sizeof(data) - 1]);
+					printf("%s\n\n", data);
 				}
 				//else
 				//{
